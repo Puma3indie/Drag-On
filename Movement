@@ -1,0 +1,87 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+
+public class Dragon : MonoBehaviour
+{
+    public GameObject gameover;
+    public Image healthbar;
+    public ParticleSystem particles;
+    public float rate;
+    public Rigidbody2D rb;
+    Vector2 mousepos;
+    public float speed;
+    public Camera cam;
+    public static float health = 10f;
+    public float maxhealth;
+	public AudioSource healthsound;
+	public AudioSource death;
+	// Start is called before the first frame update
+	void Start()
+    {
+		health = maxhealth;
+        gameover.SetActive(false);
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+
+        healthbar.fillAmount = health/maxhealth;
+        if (health <= 0)
+        {
+			death.Play();
+			gameover.SetActive(true);
+            Destroy(gameObject);
+			
+        }
+        if (health > maxhealth)
+        {
+            health = maxhealth;
+        }
+        if (Input.GetButton("Fire1"))
+        {
+            if (particles.emissionRate < 500f)
+            {
+                particles.emissionRate += Time.deltaTime * rate;
+            }
+            else
+            {
+                particles.emissionRate = 500;
+            }
+
+
+        }
+        else
+        {
+            particles.emissionRate = 0;
+        }
+
+        if(Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
+        {
+            transform.Translate(0, speed * Time.deltaTime, 0 * Time.deltaTime);
+        }
+
+        mousepos = cam.ScreenToWorldPoint(Input.mousePosition);
+        
+    }
+
+    private void FixedUpdate()
+    {
+        Vector2 lookDir = mousepos - rb.position;
+        float angle = Mathf.Atan2(lookDir.y, lookDir.x) * Mathf.Rad2Deg - 90f;
+        rb.rotation = angle;
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.tag == "Bullet")
+        {
+            health--;
+            Destroy(collision.gameObject);
+			healthsound.Play();
+        }
+    }
+}
