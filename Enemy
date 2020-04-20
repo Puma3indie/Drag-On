@@ -1,0 +1,78 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+
+public class Enemy : MonoBehaviour
+{
+    public float speed;
+    private Transform character;
+    private Transform budd;
+    public float distance;
+    public GameObject Projectile;
+    public float health;
+    float currtime;
+    public float timebet;
+    public Transform target;
+    float offset;
+    public Transform shotspot;
+	public AudioSource fireball;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        character = GameObject.FindGameObjectWithTag("Player").transform;
+        budd = GameObject.FindGameObjectWithTag("Buddy").transform;
+        offset = 90;
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+
+        
+
+        if (health <= 0)
+        {
+            Dragon.health += 0.1f;
+            buddy.health += 0.1f;
+			Score.score++;
+            Destroy(gameObject);
+        }
+        if(Vector2.Distance(transform.position,character.position)< Vector2.Distance(transform.position, budd.position))
+        {
+            target = character;
+        }
+        else
+        {
+            target = budd;
+        }
+        if(Vector2.Distance(transform.position, target.position) <= distance)
+        {
+            if(currtime <= 0)
+            {
+                currtime = timebet;
+				fireball.Play();
+                Instantiate(Projectile, shotspot.position, transform.rotation);
+
+            }
+        }
+        else
+        {
+            transform.position = Vector2.MoveTowards(transform.position, target.position, speed * Time.deltaTime);
+        }
+        currtime -= Time.deltaTime;
+
+
+        Vector2 direction = target.position - transform.position;
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        Quaternion rotation = Quaternion.AngleAxis(angle - offset,Vector3.forward);
+        transform.rotation = rotation;
+
+    }
+
+    private void OnParticleCollision(GameObject other)
+    {
+        health -= 1;
+    }
+}
