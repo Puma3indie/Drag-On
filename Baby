@@ -1,0 +1,120 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class buddy : MonoBehaviour
+{
+    public GameObject gameover;
+    public Image healthbar;
+    public float growspeed;
+    public Vector3 size;
+    public Transform target;
+    public GameObject[] enemies;
+    int num;
+    public ParticleSystem particle;
+    public float stopdist;
+    public float speed;
+    public float offset;
+    public float rotspeed;
+    public static float health = 10f;
+    public float maxhealth;
+	public AudioSource healthsound;
+	public AudioSource death;
+
+	// Start is called before the first frame update
+	void Start()
+    {
+        gameover.SetActive(false);
+		health = maxhealth;
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        healthbar.fillAmount = health / maxhealth;
+        if (health <= 0)
+        {
+            gameover.SetActive(true);
+            Destroy(gameObject);
+			death.Play();
+            
+        }
+        if (health > maxhealth)
+        {
+            health = maxhealth;
+        }
+        transform.localScale = size;
+        if(size.x < 1.2f)
+        {
+            size.x += Time.deltaTime * growspeed;
+            size.y += Time.deltaTime * growspeed;
+        }
+        else
+        {
+            
+            enemies = GameObject.FindGameObjectsWithTag("Enemy");
+            FindEnemy();
+            if (enemies.Length!=0)
+            {
+                if (Vector2.Distance(transform.position, target.position) <= stopdist)
+                {
+                    if (enemies.Length != 0)
+                    {
+                        particle.emissionRate = 500;
+                    }
+                    else
+                    {
+                        particle.emissionRate = 0;
+                    }
+
+                }
+                else
+                {
+                    particle.emissionRate = 0;
+                    transform.position = Vector2.MoveTowards(transform.position, target.position, speed * Time.deltaTime);
+                }
+                Vector2 direction = target.position - transform.position;
+                float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+                Quaternion rotation = Quaternion.AngleAxis(angle - offset, Vector3.forward);
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotation, rotspeed * Time.deltaTime);
+            }
+            else
+            {
+                particle.emissionRate = 0;
+            }
+            
+        }
+        
+
+    }
+
+    void FindEnemy()
+    {
+        float distancetoclosest = Mathf.Infinity;
+        for(num=0; num<enemies.Length; num++)
+        {
+            
+
+            if (Vector2.Distance(transform.position, enemies[num].transform.position)<distancetoclosest)
+            {
+                target = enemies[num].transform;
+            }
+            
+
+        }
+        
+
+        
+        
+    }
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.tag == "Bullet")
+        {
+            health--;
+            Destroy(collision.gameObject);
+			healthsound.Play();
+        }
+    }
+}
